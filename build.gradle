@@ -2,7 +2,6 @@ plugins {
     id 'java'
     id 'java-gradle-plugin'
     id 'idea'
-    id 'maven'
     id 'maven-publish'
     id 'jacoco'
     id 'com.diffplug.gradle.spotless' version '4.5.1'
@@ -37,6 +36,7 @@ apply {
 }
 
 repositories {
+    mavenLocal()
     maven {
         url 'https://plugins.gradle.org/m2/'
     }
@@ -50,7 +50,7 @@ dependencies {
     implementation("org.web3j:codegen:$web3jVersion") {
         exclude group: 'org.slf4j', module: 'slf4j-nop'
     }
-    testCompile "junit:junit:$junitVersion"
+    testImplementation "junit:junit:$junitVersion"
 
     configurations.all {
         resolutionStrategy {
@@ -107,4 +107,16 @@ task generateVersionProperties {
 
 tasks.withType(Test) {
     reports.html.destination file("${reporting.baseDir}/${name}")
+}
+
+publishing {
+    repositories {
+        maven {
+            name = "nexus"
+            def releasesRepoUrl = rootProject.findProperty('publishUrlForRelease')
+            def snapshotsRepoUrl = rootProject.findProperty('publishUrlForSnapshot')
+            url = version.endsWith('SNAPSHOT') ? snapshotsRepoUrl : releasesRepoUrl
+            credentials(PasswordCredentials)
+        }
+    }
 }

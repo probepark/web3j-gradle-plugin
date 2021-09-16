@@ -18,7 +18,7 @@ ext {
 
 apply {
     [
-        'jacoco',
+//        'jacoco',
         'java',
         'javadoc',
         'repositories',

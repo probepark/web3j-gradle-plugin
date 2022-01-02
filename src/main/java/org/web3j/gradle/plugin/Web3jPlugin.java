@@ -14,6 +14,7 @@ package org.web3j.gradle.plugin;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URL;
 import java.util.Properties;
 
@@ -67,8 +68,10 @@ public class Web3jPlugin implements Plugin<Project> {
         } else {
             try {
                 final Properties versionProps = new Properties();
-                versionProps.load(versionPropsFile.openStream());
-                return versionProps.getProperty("version");
+                try (InputStream inStream = versionPropsFile.openStream()) {
+                    versionProps.load(inStream);
+                    return versionProps.getProperty("version");
+                }
             } catch (IOException e) {
                 throw new PluginApplicationException(
                         Describables.of("Could not read version.properties file."), e);
@@ -150,14 +153,13 @@ public class Web3jPlugin implements Plugin<Project> {
     protected SourceDirectorySet buildSourceDirectorySet(
             Project project, final SourceSet sourceSet) {
 
-        final String displayName = capitalize(sourceSet.getName()) + " Solidity ABI";
+        final String displayName = capitalize(sourceSet.getName()) + " Solidity BIN";
 
         final SourceDirectorySet directorySet =
                 project.getObjects().sourceDirectorySet(sourceSet.getName(), displayName);
 
         directorySet.srcDir(buildOutputDir(sourceSet));
-        directorySet.include("**/*.abi");
-
+        directorySet.include("**/*.bin");
         return directorySet;
     }
 
@@ -167,7 +169,12 @@ public class Web3jPlugin implements Plugin<Project> {
             throw new InvalidUserDataException("Generated web3j package cannot be empty");
         }
 
-        return new File(extension.getGeneratedFilesBaseDir() + "/" + sourceSet.getName() + "/java");
+        return new File(
+                extension.getGeneratedFilesBaseDir()
+                        + File.separator
+                        + sourceSet.getName()
+                        + File.separator
+                        + "java");
     }
 
     protected File buildOutputDir(final SourceSet sourceSet) {
